@@ -23,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useBoard } from "@/lib/hooks/useBoards";
 import { ColumnWithTasks, Task } from "@/lib/supabase/models";
-import { Calendar, MoreHorizontal, Plus, Pointer, User } from "lucide-react";
+import { Calendar, MoreHorizontal, Plus, Pointer, Trash2, User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import {
@@ -55,6 +55,7 @@ function DroppableColumn({
     children: React.ReactNode;
     onCreateTask: (taskData: any, columnId: string) => Promise<void>;
     onEditColumn: (column: ColumnWithTasks) => void;
+    onDeleteColumn: (columnId: string) => void;
 }) {
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
     return (
@@ -78,14 +79,27 @@ function DroppableColumn({
                                 {column.tasks.length}
                             </Badge>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="flex-shrink-0"
-                            onClick={() => onEditColumn(column)}
-                        >
-                            <MoreHorizontal />
-                        </Button>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onEditColumn(column)}
+                            >
+                                <MoreHorizontal />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-gray-400 hover:text-red-500"
+                                onClick={() => {
+                                    if (confirm(`Delete column "${column.title}"? All tasks in it will be deleted.`)) {
+                                        onDeleteColumn(column.id);
+                                    }
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
@@ -170,7 +184,7 @@ function DroppableColumn({
     );
 }
 
-function SortableTask({ task }: { task: Task }) {
+function SortableTask({ task, onDelete }: { task: Task; onDelete: () => void }) {
     const {
         attributes,
         listeners,
@@ -200,7 +214,7 @@ function SortableTask({ task }: { task: Task }) {
     }
     return (
         <div ref={setNodeRef} style={styles} {...listeners} {...attributes}>
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow group/task">
                 <CardContent className="p-3 sm:p-4">
                     <div className="space-y-2 sm:space-y-3">
                         {/* Task Header */}
@@ -208,6 +222,12 @@ function SortableTask({ task }: { task: Task }) {
                             <h4 className="font-medium text-gray-900 text-sm leading-tight flex-1 min-w-0 pr-2">
                                 {task.title}
                             </h4>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                                className="opacity-0 group-hover/task:opacity-100 transition-opacity text-gray-400 hover:text-red-500 flex-shrink-0"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                         </div>
 
                         {/* Task Description */}
@@ -312,6 +332,8 @@ export default function BoardPage() {
         setColumns,
         moveTask,
         updateColumn,
+        deleteColumn,
+        deleteTask,
     } = useBoard(id);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -811,6 +833,7 @@ export default function BoardPage() {
                                     column={column}
                                     onCreateTask={handleCreateTask}
                                     onEditColumn={handleEditColumn}
+                                    onDeleteColumn={(columnId) => deleteColumn(columnId)}
                                 >
                                     <SortableContext
                                         items={column.tasks.map((task) => task.id)}
@@ -818,7 +841,11 @@ export default function BoardPage() {
                                     >
                                         <div className="space-y-3">
                                             {column.tasks.map((task, key) => (
-                                                <SortableTask task={task} key={key} />
+                                                <SortableTask
+                                                    task={task}
+                                                    key={key}
+                                                    onDelete={() => deleteTask(task.id, column.id)}
+                                                />
                                             ))}
                                         </div>
                                     </SortableContext>

@@ -191,12 +191,4 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Assumptions
-
-- A single user per account; no real-time multi-user collaboration
-- Board colours are Tailwind CSS class names stored as strings
-- Drag-and-drop sort order is persisted to Supabase on every drop
-
----
-
 Built by **Krishang Bose**

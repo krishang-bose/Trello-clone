@@ -117,7 +117,7 @@ export default function DashboardPage() {
 
             <main className="container mx-auto px-4 py-6 sm:py-8">
                 <div className="mb-6 sm:mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-2">
                         Welcome back,{" "}
                         {user?.firstName ?? user?.emailAddresses[0].emailAddress}! 👋
                     </h1>
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                 <div className="mb-6 sm:mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">
                         <div>
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
                                 Your Boards
                             </h2>
                             <p className="text-gray-600">Manage your projects and tasks</p>

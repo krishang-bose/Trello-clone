@@ -194,7 +194,6 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Assumptions
 
 - A single user per account; no real-time multi-user collaboration
-- "Archive" removes a card from view but does not hard-delete it (archived flag in DB)
 - Board colours are Tailwind CSS class names stored as strings
 - Drag-and-drop sort order is persisted to Supabase on every drop
 

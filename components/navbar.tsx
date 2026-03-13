@@ -50,7 +50,7 @@ export default function Navbar({
     if (isDashboardPage) {
         return (
             <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+                <div className="w-full px-4 py-3 sm:py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <TrelloIcon className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                         <span className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -69,20 +69,22 @@ export default function Navbar({
     if (isBoardPage) {
         return (
             <header className="bg-white border-b sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-3 sm:py-4">
+                <div className="w-full px-4 py-3 sm:py-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+                    <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <TrelloIcon className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="h-4 sm:h-6 w-px bg-gray-300" />
                             <Link
                                 href="/dashboard"
                                 className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 flex-shrink-0"
                             >
                                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                                <span className="hidden sm:inline">Back to dashboard</span>
-                                <span className="sm:hidden">Back</span>
+                                <span className="hidden sm:inline">Back</span>
                             </Link>
                             <div className="h-4 sm:h-6 w-px bg-gray-300 hidden sm:block" />
                             <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-                                <TrelloIcon className="text-blue-600" />
                                 <div className="items-center space-x-1 sm:space-x-2 min-w-0">
                                     <span className="text-lg font-bold text-gray-900 truncate">
                                         {boardTitle}
@@ -131,7 +133,7 @@ export default function Navbar({
 
     return (
         <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-            <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+            <div className="w-full px-4 py-3 sm:py-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                     <Trello className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                     <span className="text-xl sm:text-2xl font-bold text-gray-900">

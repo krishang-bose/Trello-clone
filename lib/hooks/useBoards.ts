@@ -259,6 +259,19 @@ export function useBoard(boardId: string) {
         }
     }
 
+    async function reorderColumns(reordered: ColumnWithTasks[]) {
+        setColumns(reordered);
+        try {
+            await Promise.all(
+                reordered.map((col, i) =>
+                    columnService.updateColumnOrder(supabase!, col.id, i)
+                )
+            );
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to reorder columns.");
+        }
+    }
+
     return {
         board,
         columns,
@@ -272,5 +285,6 @@ export function useBoard(boardId: string) {
         updateColumn,
         deleteColumn,
         deleteTask,
+        reorderColumns,
     };
 }

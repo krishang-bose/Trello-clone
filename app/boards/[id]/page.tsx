@@ -33,12 +33,13 @@ import {
     DragStartEvent,
     PointerSensor,
     rectIntersection,
-    useDroppable,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
 import {
     SortableContext,
+    arrayMove,
+    horizontalListSortingStrategy,
     useSortable,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -51,16 +52,25 @@ function priorityDot(p: "low" | "medium" | "high") {
 
 // ─── SortableTask ──────────────────────────────────────────────────────────────
 function SortableTask({ task, onDelete }: { task: Task; onDelete: () => void }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-        useSortable({ id: task.id });
+    const {
+        attributes, listeners, setNodeRef, setActivatorNodeRef,
+        transform, transition, isDragging,
+    } = useSortable({ id: task.id, data: { type: 'task' } });
 
     return (
         <div
             ref={setNodeRef}
-            style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+            style={{
+                transform: CSS.Transform.toString(transform),
+                transition: transition ?? "transform 200ms cubic-bezier(0.2, 0, 0, 1)",
+            }}
             {...listeners}
             {...attributes}
-            className="group/task bg-white rounded-lg shadow-sm border border-gray-200 px-3 py-2.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+            className={`group/task bg-white rounded-lg border px-3 py-2.5 cursor-grab active:cursor-grabbing select-none transition-shadow ${
+                isDragging
+                    ? "border-dashed border-blue-300 bg-blue-50/40 shadow-none opacity-50"
+                    : "border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200"
+            }`}
         >
             <div className="flex items-start justify-between gap-2">
                 <p className="text-sm text-gray-800 leading-snug flex-1">{task.title}</p>
@@ -94,18 +104,31 @@ function DroppableColumn({
     onEditColumn: (column: ColumnWithTasks) => void;
     onDeleteColumn: (id: string) => void;
 }) {
-    const { setNodeRef, isOver } = useDroppable({ id: column.id });
+    const {
+        attributes, listeners, setNodeRef, setActivatorNodeRef,
+        transform, transition, isDragging,
+    } = useSortable({ id: column.id, data: { type: 'column' } });
     const [addOpen, setAddOpen] = useState(false);
 
     return (
         <div
             ref={setNodeRef}
-            className={`flex-shrink-0 w-72 flex flex-col rounded-xl bg-white/95 shadow-md max-h-full transition-all ${isOver ? "ring-2 ring-white/60" : ""}`}
+            style={{
+                transform: CSS.Transform.toString(transform),
+                transition: transition ?? "transform 200ms cubic-bezier(0.2, 0, 0, 1)",
+                opacity: isDragging ? 0.45 : 1,
+            }}
+            className="flex-shrink-0 w-72 flex flex-col rounded-xl bg-white/95 shadow-md max-h-full"
         >
-            {/* Column Header */}
-            <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                <span className="text-sm font-semibold text-gray-700">{column.title}</span>
-                <div className="flex items-center gap-0.5">
+            {/* Column Header — drag handle */}
+            <div
+                ref={setActivatorNodeRef}
+                {...listeners}
+                {...attributes}
+                className="flex items-center justify-between px-3 pt-3 pb-2 cursor-grab active:cursor-grabbing"
+            >
+                <span className="text-sm font-semibold text-gray-700 select-none">{column.title}</span>
+                <div className="flex items-center gap-0.5" onPointerDown={(e) => e.stopPropagation()}>
                     <button
                         onClick={() => onEditColumn(column)}
                         className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
@@ -199,7 +222,7 @@ export default function BoardPage() {
     const {
         board, createColumn, updateBoard, columns, loading,
         createRealTask, setColumns, moveTask, updateColumn,
-        deleteColumn, deleteTask,
+        deleteColumn, deleteTask, reorderColumns,
     } = useBoard(id);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -211,9 +234,12 @@ export default function BoardPage() {
     const [editingColumnTitle, setEditingColumnTitle] = useState("");
     const [editingColumn, setEditingColumn] = useState<ColumnWithTasks | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
+    const [draggingColumn, setDraggingColumn] = useState<ColumnWithTasks | null>(null);
     const [savingColumn, setSavingColumn] = useState(false);
 
-    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
+    );
 
     const allTasks = columns.flatMap((col) =>
         col.tasks.map((t) => ({ ...t, columnTitle: col.title }))
@@ -242,13 +268,16 @@ export default function BoardPage() {
     }
 
     function handleDragStart(event: DragStartEvent) {
-        const task = columns.flatMap((c) => c.tasks).find((t) => t.id === event.active.id);
-        if (task) setActiveTask(task);
+        const id = event.active.id as string;
+        const col = columns.find((c) => c.id === id);
+        if (col) { setDraggingColumn(col); setActiveTask(null); return; }
+        const task = columns.flatMap((c) => c.tasks).find((t) => t.id === id);
+        if (task) { setActiveTask(task); setDraggingColumn(null); }
     }
 
     function handleDragOver(event: DragOverEvent) {
         const { active, over } = event;
-        if (!over) return;
+        if (!over || draggingColumn) return; // ignore over events when dragging a column
         const activeId = active.id as string;
         const overId = over.id as string;
         const sourceCol = columns.find((c) => c.tasks.some((t) => t.id === activeId));
@@ -272,6 +301,20 @@ export default function BoardPage() {
     async function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
         setActiveTask(null);
+
+        // ── Column reorder
+        if (draggingColumn) {
+            setDraggingColumn(null);
+            if (!over || active.id === over.id) return;
+            const oldIndex = columns.findIndex((c) => c.id === active.id);
+            const newIndex = columns.findIndex((c) => c.id === over.id);
+            if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                await reorderColumns(arrayMove(columns, oldIndex, newIndex));
+            }
+            return;
+        }
+
+        // ── Task move
         if (!over) return;
         const taskId = active.id as string;
         const overId = over.id as string;
@@ -395,6 +438,7 @@ export default function BoardPage() {
                                 onDragEnd={handleDragEnd}
                             >
                                 <div className="flex gap-4 p-4 overflow-x-auto flex-1 items-start [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-black/20 [&::-webkit-scrollbar-thumb]:bg-white/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+                                    <SortableContext items={columns.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
                                     {columns.map((column) => (
                                         <DroppableColumn
                                             key={column.id}
@@ -414,7 +458,7 @@ export default function BoardPage() {
                                             </SortableContext>
                                         </DroppableColumn>
                                     ))}
-
+                                    </SortableContext>
                                     {/* Add another list */}
                                     <button
                                         onClick={() => setIsCreatingColumn(true)}
@@ -424,10 +468,28 @@ export default function BoardPage() {
                                         Add another list
                                     </button>
 
-                                    <DragOverlay>
+                                    <DragOverlay
+                                        dropAnimation={{
+                                            duration: 220,
+                                            easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+                                        }}
+                                    >
                                         {activeTask ? (
-                                            <div className="bg-white rounded-lg shadow-xl border border-gray-200 px-3 py-2.5 w-72 opacity-90">
-                                                <p className="text-sm text-gray-800">{activeTask.title}</p>
+                                            <div
+                                                className="bg-white rounded-lg border border-blue-300 px-3 py-2.5 shadow-2xl cursor-grabbing"
+                                                style={{
+                                                    width: 272,
+                                                    transform: "rotate(2deg) scale(1.03)",
+                                                    boxShadow: "0 20px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(59,130,246,0.15)",
+                                                }}
+                                            >
+                                                <p className="text-sm text-gray-800 font-medium">{activeTask.title}</p>
+                                                {(activeTask.priority || activeTask.due_date) && (
+                                                    <div className="flex items-center gap-2 mt-1.5">
+                                                        {priorityDot(activeTask.priority)}
+                                                        {activeTask.due_date && <span className="text-xs text-gray-400">{activeTask.due_date}</span>}
+                                                    </div>
+                                                )}
                                             </div>
                                         ) : null}
                                     </DragOverlay>

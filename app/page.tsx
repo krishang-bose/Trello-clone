@@ -125,7 +125,14 @@ export default function HomePage() {
             and reach new productivity peaks together.
           </p>
 
-          {!isSignedIn ? (
+          {isSignedIn ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl text-base transition-all hover:scale-105 shadow-lg shadow-blue-900/40"
+            >
+              Open your boards <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <SignUpButton>
                 <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl text-base transition-all hover:scale-105 shadow-lg shadow-blue-900/40">
@@ -138,13 +145,6 @@ export default function HomePage() {
                 </button>
               </SignInButton>
             </div>
-          ) : (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-all hover:scale-105"
-            >
-              Open your boards <ArrowRight className="h-4 w-4" />
-            </Link>
           )}
         </div>
 
@@ -218,19 +218,19 @@ export default function HomePage() {
           <p className="text-gray-400 mb-8">
             Free forever. No credit card required.
           </p>
-          {!isSignedIn ? (
+          {isSignedIn ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 font-semibold px-8 py-3.5 rounded-xl text-base transition-all hover:scale-105 shadow-lg shadow-blue-900/40"
+            >
+              View your boards <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
             <SignUpButton>
               <button className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 font-semibold px-8 py-3.5 rounded-xl text-base transition-all hover:scale-105 shadow-lg shadow-blue-900/40">
                 Create free account <ArrowRight className="h-4 w-4" />
               </button>
             </SignUpButton>
-          ) : (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 font-semibold px-8 py-3.5 rounded-xl transition-all hover:scale-105"
-            >
-              View your boards <ArrowRight className="h-4 w-4" />
-            </Link>
           )}
         </div>
       </section>
@@ -245,12 +245,7 @@ export default function HomePage() {
         <span>© 2026</span>
       </footer>
 
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-4px); }
-        }
-      `}</style>
+
     </div>
   );
 }

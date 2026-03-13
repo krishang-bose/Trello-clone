@@ -108,6 +108,14 @@ export const columnService = {
         if (error) throw error;
         return data;
     },
+    async updateColumnOrder(supabase: SupabaseClient, columnId: string, sortOrder: number): Promise<void> {
+        const { error } = await supabase
+            .from("columns")
+            .update({ sort_order: sortOrder })
+            .eq("id", columnId);
+        if (error) throw error;
+    },
+
     async deleteColumn(supabase: SupabaseClient, columnId: string): Promise<void> {
         const { error } = await supabase.from("columns").delete().eq("id", columnId);
         if (error) throw error;
@@ -147,6 +155,21 @@ export const taskService = {
 
         if (error) throw error;
 
+        return data;
+    },
+
+    async updateTask(
+        supabase: SupabaseClient,
+        taskId: string,
+        updates: Partial<Omit<Task, "id" | "created_at">>
+    ): Promise<Task> {
+        const { data, error } = await supabase
+            .from("tasks")
+            .update(updates)
+            .eq("id", taskId)
+            .select()
+            .single();
+        if (error) throw error;
         return data;
     },
 

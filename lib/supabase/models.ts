@@ -20,6 +20,12 @@ export type ColumnWithTasks = Column & {
     tasks: Task[];
 };
 
+export interface ChecklistItem {
+    id: string;
+    text: string;
+    completed: boolean;
+}
+
 export interface Task {
     id: string;
     column_id: string;
@@ -30,4 +36,7 @@ export interface Task {
     priority: "low" | "medium" | "high";
     sort_order: number;
     created_at: string;
+    labels: string[];
+    archived: boolean;
+    checklist_items: ChecklistItem[];
 }

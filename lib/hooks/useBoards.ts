@@ -142,6 +142,9 @@ export function useBoard(boardId: string) {
                 sort_order:
                     columns.find((col) => col.id === columnId)?.tasks.length || 0,
                 priority: taskData.priority || "medium",
+                labels: [],
+                archived: false,
+                checklist_items: [],
             });
 
             setColumns((prev) =>

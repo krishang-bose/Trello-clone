@@ -73,7 +73,7 @@ export function useBoard(boardId: string) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (boardId) {
+        if (boardId && supabase) {
             loadBoard();
         }
     }, [boardId, supabase]);
@@ -194,7 +194,6 @@ export function useBoard(boardId: string) {
                 title,
                 board_id: board.id,
                 sort_order: columns.length,
-                user_id: user.id,
             });
 
             setColumns((prev) => [...prev, { ...newColumn, tasks: [] }]);

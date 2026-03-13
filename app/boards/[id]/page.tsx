@@ -53,7 +53,7 @@ function DroppableColumn({
 }: {
     column: ColumnWithTasks;
     children: React.ReactNode;
-    onCreateTask: (taskData: any) => Promise<void>;
+    onCreateTask: (taskData: any, columnId: string) => Promise<void>;
     onEditColumn: (column: ColumnWithTasks) => void;
 }) {
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
@@ -93,14 +93,16 @@ function DroppableColumn({
                 <div className="p-2">
                     {children}
                     <Dialog>
-                        <DialogTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                className="w-full mt-3 text-gray-500 hover:text-gray-700"
-                            >
-                                <Plus />
-                                Add Task
-                            </Button>
+                        <DialogTrigger
+                            render={
+                                <Button
+                                    variant="ghost"
+                                    className="w-full mt-3 text-gray-500 hover:text-gray-700"
+                                />
+                            }
+                        >
+                            <Plus />
+                            Add Task
                         </DialogTrigger>
                         <DialogContent className="w-[95vw] max-w-[425px] mx-auto">
                             <DialogHeader>
@@ -108,7 +110,7 @@ function DroppableColumn({
                                 <p className="text-sm text-gray-600">Add a task to the board</p>
                             </DialogHeader>
 
-                            <form className="space-y-4" onSubmit={onCreateTask}>
+                            <form className="space-y-4" onSubmit={(e) => onCreateTask(e, column.id)}>
                                 <div className="space-y-2">
                                     <Label>Title *</Label>
                                     <Input
@@ -374,22 +376,20 @@ export default function BoardPage() {
         } catch { }
     }
 
-    async function createTask(taskData: {
-        title: string;
-        description?: string;
-        assignee?: string;
-        dueDate?: string;
-        priority: "low" | "medium" | "high";
-    }) {
-        const targetColumn = columns[0];
-        if (!targetColumn) {
-            throw new Error("No column available to add task");
+    async function createTask(
+        columnId: string,
+        taskData: {
+            title: string;
+            description?: string;
+            assignee?: string;
+            dueDate?: string;
+            priority: "low" | "medium" | "high";
         }
-
-        await createRealTask(targetColumn.id, taskData);
+    ) {
+        await createRealTask(columnId, taskData);
     }
 
-    async function handleCreateTask(e: any) {
+    async function handleCreateTask(e: any, columnId?: string) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const taskData = {
@@ -401,13 +401,14 @@ export default function BoardPage() {
                 (formData.get("priority") as "low" | "medium" | "high") || "medium",
         };
 
-        if (taskData.title.trim()) {
-            await createTask(taskData);
+        const targetColumnId = columnId ?? columns[0]?.id;
+        if (!targetColumnId) {
+            console.error("No column available — add a column first.");
+            return;
+        }
 
-            const trigger = document.querySelector(
-                '[data-state="open"'
-            ) as HTMLElement;
-            if (trigger) trigger.click();
+        if (taskData.title.trim()) {
+            await createTask(targetColumnId, taskData);
         }
     }
 
@@ -717,11 +718,11 @@ export default function BoardPage() {
 
                         {/* Add task dialog */}
                         <Dialog>
-                            <DialogTrigger asChild>
-                                <Button className="w-full sm:w-auto">
-                                    <Plus />
-                                    Add Task
-                                </Button>
+                            <DialogTrigger
+                                render={<Button className="w-full sm:w-auto" />}
+                            >
+                                <Plus />
+                                Add Task
                             </DialogTrigger>
                             <DialogContent className="w-[95vw] max-w-[425px] mx-auto">
                                 <DialogHeader>

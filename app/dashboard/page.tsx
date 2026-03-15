@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useBoards } from "@/lib/hooks/useBoards";
 import { Board } from "@/lib/supabase/models";
 import { useUser } from "@clerk/nextjs";
-import { Home, Layout, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, Home, Layout, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -25,6 +25,7 @@ export default function DashboardPage() {
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [newBoardName, setNewBoardName] = useState("");
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const workspaceName = user?.firstName ? `${user.firstName}'s Workspace` : "My Workspace";
     const workspaceInitial = (user?.firstName ?? user?.emailAddresses[0]?.emailAddress ?? "W")[0].toUpperCase();
@@ -61,44 +62,65 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar />
 
-            <div className="flex flex-1">
-                {/* Left Sidebar */}
-                <aside className="w-64 bg-white border-r border-gray-200 flex-shrink-0 hidden sm:flex flex-col py-4">
-                    <div className="px-3 mb-4">
-                        <Link
-                            href="/"
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
-                            <Home className="h-4 w-4" />
-                            Home
-                        </Link>
-                        <button
-                            onClick={() => router.push("/dashboard")}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors mt-1"
-                        >
+            <div className="flex flex-1 overflow-hidden">
+                {/* Collapsible Sidebar */}
+                <aside
+                    className={`relative bg-white border-r border-gray-200 flex-shrink-0 flex flex-col transition-all duration-200 ease-in-out ${
+                        sidebarOpen ? "w-60" : "w-12"
+                    }`}
+                >
+                    {/* Toggle button */}
+                    <button
+                        onClick={() => setSidebarOpen((o) => !o)}
+                        title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                        className="flex items-center justify-center h-10 w-10 mx-1 mt-2 rounded-md text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
+                    >
+                        {sidebarOpen ? (
+                            <ChevronLeft className="h-4 w-4" />
+                        ) : (
                             <Layout className="h-4 w-4" />
-                            Boards
-                        </button>
-                    </div>
+                        )}
+                    </button>
 
-                    <hr className="border-gray-200 mx-3 mb-4" />
+                    {/* Sidebar content — hidden when collapsed */}
+                    <div className={`flex flex-col overflow-hidden transition-opacity duration-150 ${
+                        sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                    }`}>
+                        <div className="px-2 mt-1 space-y-0.5">
+                            <Link
+                                href="/"
+                                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                            >
+                                <Home className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate">Home</span>
+                            </Link>
+                            <button
+                                onClick={() => router.push("/dashboard")}
+                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                            >
+                                <Layout className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate">Boards</span>
+                            </button>
+                        </div>
 
-                    <div className="px-3">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">
-                            Workspaces
-                        </p>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
-                            <div className="h-6 w-6 rounded bg-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                {workspaceInitial}
+                        <hr className="border-gray-200 mx-3 my-3" />
+
+                        <div className="px-2">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">
+                                Workspaces
+                            </p>
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
+                                <div className="h-6 w-6 rounded bg-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                    {workspaceInitial}
+                                </div>
+                                <span className="truncate">{workspaceName}</span>
                             </div>
-                            <span className="truncate">{workspaceName}</span>
                         </div>
                     </div>
                 </aside>
 
                 {/* Main Content */}
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
-                    {/* Workspace Header */}
                     <div className="flex items-center gap-3 mb-6">
                         <div className="h-9 w-9 rounded bg-green-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                             {workspaceInitial}

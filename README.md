@@ -13,8 +13,6 @@ A full-featured Trello-like project management app built with **Next.js 15**, **
 | Styling | Tailwind CSS + Shadcn UI |
 | Database | Supabase (PostgreSQL) |
 | Auth | Clerk |
-| Drag & Drop | @dnd-kit/core + @dnd-kit/sortable |
-| Font | Nunito (Google Fonts) |
 
 ---
 
